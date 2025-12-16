@@ -1,0 +1,114 @@
+--------------------------------------------------- -- タイトル ---------------------------------------------------
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 50)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.Code
+title.TextColor3 = Color3.fromRGB(0, 255, 0)
+title.TextScaled = true
+title.Text = "zzZHUB"
+
+--------------------------------------------------- -- ボタン作成関数 ---------------------------------------------------
+local function createBtn(text, y)
+    local b = Instance.new("TextButton", frame)
+    b.Size = UDim2.new(1, -40, 0, 45)
+    b.Position = UDim2.new(0, 20, 0, y)
+    b.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    b.TextColor3 = Color3.fromRGB(0, 255, 0)
+    b.Font = Enum.Font.Code
+    b.TextScaled = true
+
+    local s = Instance.new("UIStroke", b)
+    s.Color = Color3.fromRGB(0, 255, 0)
+    s.Thickness = 2
+
+    local c = Instance.new("UICorner", b)
+    c.CornerRadius = UDim.new(0, 6)
+
+    b.Text = text
+    return b
+end
+
+--------------------------------------------------- -- Instant Pickup ボタン ---------------------------------------------------
+local instantBtn = createBtn("Instant Pickup: OFF", 60)
+local instantEnabled = false
+
+instantBtn.MouseButton1Click:Connect(function()
+    instantEnabled = not instantEnabled
+    instantBtn.Text = "Instant Pickup: " .. (instantEnabled and "ON" or "OFF")
+
+    if instantEnabled then
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("ProximityPrompt") then
+                obj.HoldDuration = 0
+            end
+        end
+
+        workspace.DescendantAdded:Connect(function(obj)
+            if instantEnabled and obj:IsA("ProximityPrompt") then
+                obj.HoldDuration = 0
+            end
+        end)
+    end
+end)
+
+--------------------------------------------------- -- Speed 切替 ---------------------------------------------------
+local speedBtn = createBtn("Speed: NORMAL", 115)
+local normal = 16
+local fast = 80
+local fastMode = false
+
+speedBtn.MouseButton1Click:Connect(function()
+    fastMode = not fastMode
+    speedBtn.Text = "Speed: " .. (fastMode and "FAST" or "NORMAL")
+
+    local char = player.Character or player.CharacterAdded:Wait()
+    char:WaitForChild("Humanoid").WalkSpeed = fastMode and fast or normal
+end)
+
+--------------------------------------------------- -- Spawn ワープ ---------------------------------------------------
+local tpBtn = createBtn("Teleport to Spawn", 170)
+
+tpBtn.MouseButton1Click:Connect(function()
+    local spawn = workspace:FindFirstChild("SpawnLocation")
+    local char = player.Character
+    if spawn and char then
+        char:MoveTo(spawn.Position)
+    end
+end)
+
+--------------------------------------------------- -- NoClip（壁貫通） ---------------------------------------------------
+local noclipBtn = createBtn("NoClip: OFF", 225)
+local noclip = false
+local noclipCon
+
+noclipBtn.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    noclipBtn.Text = "NoClip: " .. (noclip and "ON" or "OFF")
+
+    if noclip then
+        noclipCon = RS.Stepped:Connect(function()
+            local char = player.Character
+            if char then
+                for _, p in ipairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        if noclipCon then
+            noclipCon:Disconnect()
+        end
+
+        local char = player.Character
+        if char then
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("BasePart") then
+                    p.CanCollide = true
+                end
+            end
+        end
+    end
+end)
